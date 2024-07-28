@@ -1,5 +1,7 @@
 import sys
 from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QVBoxLayout, QWidget, QFileDialog
+from mutagen.easyid3 import EasyID3
+from mutagen.id3 import ID3
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -37,8 +39,15 @@ class MainWindow(QMainWindow):
 
     def upload_file(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Open MP3 File", "", "MP3 Files (*.mp3)")
-        if file_path:
-            self.file_selected_label.setText(f"Selected file: {file_path}")
+        if not file_path:
+            return
+        
+        try:
+            audio = EasyID3(file_path)
+        except mutagen.id3.ID3NoHeaderError:
+            audio = mutagen.File(file_path, easy=True)
+            audio.add_tags()
+        print(audio)
 
 # Create the application instance
 app = QApplication(sys.argv)
