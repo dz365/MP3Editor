@@ -1,5 +1,5 @@
 import sys
-from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QVBoxLayout, QWidget, QFileDialog
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -19,6 +19,14 @@ class MainWindow(QMainWindow):
         self.button.clicked.connect(self.button_clicked)
         layout.addWidget(self.button)
 
+        self.file_selected_label = QLabel("No file selected")
+        layout.addWidget(self.file_selected_label)
+
+        # Create a file upload button and connect its clicked signal to a method
+        self.file_button = QPushButton("Upload File")
+        self.file_button.clicked.connect(self.upload_file)
+        layout.addWidget(self.file_button)
+
         # Set up a central widget with the layout
         container = QWidget()
         container.setLayout(layout)
@@ -26,6 +34,11 @@ class MainWindow(QMainWindow):
 
     def button_clicked(self):
         self.label.setText("Button clicked!")
+
+    def upload_file(self):
+        file_path, _ = QFileDialog.getOpenFileName(self, "Open MP3 File", "", "MP3 Files (*.mp3)")
+        if file_path:
+            self.file_selected_label.setText(f"Selected file: {file_path}")
 
 # Create the application instance
 app = QApplication(sys.argv)
