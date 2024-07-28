@@ -1,6 +1,7 @@
 import sys
 from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QVBoxLayout, QWidget, QFileDialog
-from mutagen.id3 import ID3, APIC
+from mutagen.easyid3 import EasyID3
+from mutagen.id3 import ID3
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -42,11 +43,11 @@ class MainWindow(QMainWindow):
             return
         
         try:
-            audio = ID3(file_path)
+            audio = EasyID3(file_path)
         except mutagen.id3.ID3NoHeaderError:
             audio = mutagen.File(file_path, easy=True)
             audio.add_tags()
-        print(audio.)
+        print(audio)
 
 # Create the application instance
 app = QApplication(sys.argv)
