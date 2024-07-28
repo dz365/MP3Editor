@@ -5,6 +5,7 @@ The aim of this GUI is to enable users to edit the metadata of their MP3 files a
 ```
 python -m venv env
 source env/bin/activate or env\Scripts\activate.bat (if on Windows)
+pip install -r requirements.txt
 python3 app.py
 deactivate (to leave virtual environment)
 ```
