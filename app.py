@@ -1,5 +1,6 @@
 import sys
 from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QVBoxLayout, QWidget, QFileDialog
+from PySide6.QtGui import QImage, QPixmap
 from mutagen.id3 import ID3, ID3NoHeaderError, APIC
 
 class MainWindow(QMainWindow):
@@ -52,8 +53,21 @@ class MainWindow(QMainWindow):
         }
 
         self.file_selected_label.setText(file_path)
+
+
+        # Display album cover first
+        for tag in audio.values():
+            if isinstance(tag, APIC):
+                image = QImage()
+                image.loadFromData(tag.data)
+                pixmap = QPixmap.fromImage(image)
+
+                image_label = QLabel()
+                image_label.setPixmap(pixmap)
+                self.audio_info_layout.addWidget(image_label)
+                break
+            
         for _tag, value in audio.items():
-            if (type(value) == APIC): continue
             tag = COMMON_TAGS.get(_tag)
             if not tag:
                 print(_tag)
