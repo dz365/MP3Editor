@@ -1,7 +1,6 @@
 import sys
 from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QVBoxLayout, QWidget, QFileDialog
-from mutagen.easyid3 import EasyID3
-from mutagen.id3 import ID3
+from mutagen.id3 import ID3, ID3NoHeaderError, APIC
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -10,28 +9,22 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("MP3 Editor")
 
         # Set up the main layout
-        layout = QVBoxLayout()
-
-        # Create a label and add it to the layout
-        self.label = QLabel("Hello, PySide6!")
-        layout.addWidget(self.label)
-
-        # Create a button and connect its clicked signal to a method
-        self.button = QPushButton("Click me!")
-        self.button.clicked.connect(self.button_clicked)
-        layout.addWidget(self.button)
-
+        self.main_layout = QVBoxLayout()
+        self.audio_info_layout = QVBoxLayout()
+    
         self.file_selected_label = QLabel("No file selected")
-        layout.addWidget(self.file_selected_label)
+        self.main_layout.addWidget(self.file_selected_label)
 
         # Create a file upload button and connect its clicked signal to a method
         self.file_button = QPushButton("Upload File")
         self.file_button.clicked.connect(self.upload_file)
-        layout.addWidget(self.file_button)
+        self.main_layout.addWidget(self.file_button)
+
+        self.main_layout.addLayout(self.audio_info_layout)
 
         # Set up a central widget with the layout
         container = QWidget()
-        container.setLayout(layout)
+        container.setLayout(self.main_layout)
         self.setCentralWidget(container)
 
     def button_clicked(self):
@@ -43,11 +36,31 @@ class MainWindow(QMainWindow):
             return
         
         try:
-            audio = EasyID3(file_path)
-        except mutagen.id3.ID3NoHeaderError:
+            audio = ID3(file_path)
+        except ID3NoHeaderError:
             audio = mutagen.File(file_path, easy=True)
             audio.add_tags()
-        print(audio)
+        
+        for i in reversed(range(self.audio_info_layout.count())): 
+            self.audio_info_layout.itemAt(i).widget().setParent(None)
+
+        COMMON_TAGS = {
+            'TIT2': 'Title',
+            'TPE1': 'Artist',
+            'TALB': 'Album',
+            'TDRC': 'Year'
+        }
+
+        self.file_selected_label.setText(file_path)
+        for _tag, value in audio.items():
+            if (type(value) == APIC): continue
+            tag = COMMON_TAGS.get(_tag)
+            if not tag:
+                print(_tag)
+                continue
+            ID3_value = QLabel(f"{tag}: {value}")
+            self.audio_info_layout.addWidget(ID3_value)
+        
 
 # Create the application instance
 app = QApplication(sys.argv)
