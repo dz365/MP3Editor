@@ -1,7 +1,19 @@
 import sys
-from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QVBoxLayout, QWidget, QFileDialog
+from PySide6.QtWidgets import (
+    QApplication,
+    QMainWindow,
+    QPushButton,
+    QLabel,
+    QVBoxLayout,
+    QWidget,
+    QFileDialog,
+    QLineEdit,
+    QFormLayout
+)
 from PySide6.QtGui import QImage, QPixmap
+from PySide6.QtCore import Qt
 from mutagen.id3 import ID3, ID3NoHeaderError, APIC
+from mutagen import File as MutagenFile
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -27,9 +39,18 @@ class MainWindow(QMainWindow):
         container = QWidget()
         container.setLayout(self.main_layout)
         self.setCentralWidget(container)
+    
+    # Removes all items from a layout
+    def clearLayout(self, layout):
+        if layout is not None:
+            while layout.count():
+                item = layout.takeAt(0)
+                widget = item.widget()
+                if widget is not None:
+                    widget.deleteLater()
+                else:
+                    self.clearLayout(item.layout())
 
-    def button_clicked(self):
-        self.label.setText("Button clicked!")
 
     def upload_file(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Open MP3 File", "", "MP3 Files (*.mp3)")
@@ -39,11 +60,10 @@ class MainWindow(QMainWindow):
         try:
             audio = ID3(file_path)
         except ID3NoHeaderError:
-            audio = mutagen.File(file_path, easy=True)
+            audio = MutagenFile(file_path, easy=True)
             audio.add_tags()
         
-        for i in reversed(range(self.audio_info_layout.count())): 
-            self.audio_info_layout.itemAt(i).widget().setParent(None)
+        self.clearLayout(self.audio_info_layout)
 
         COMMON_TAGS = {
             'TIT2': 'Title',
@@ -60,20 +80,23 @@ class MainWindow(QMainWindow):
             if isinstance(tag, APIC):
                 image = QImage()
                 image.loadFromData(tag.data)
-                pixmap = QPixmap.fromImage(image)
+                pixmap = QPixmap.fromImage(image).scaled(256, 256, Qt.KeepAspectRatio)
 
                 image_label = QLabel()
                 image_label.setPixmap(pixmap)
                 self.audio_info_layout.addWidget(image_label)
                 break
-            
+        
+        form_layout = QFormLayout()
         for _tag, value in audio.items():
             tag = COMMON_TAGS.get(_tag)
             if not tag:
                 print(_tag)
                 continue
-            ID3_value = QLabel(f"{tag}: {value}")
-            self.audio_info_layout.addWidget(ID3_value)
+            label = QLabel(f"{tag}: ")
+            input = QLineEdit(str(value))
+            form_layout.addRow(label, input)
+        self.audio_info_layout.addLayout(form_layout)
         
 
 # Create the application instance
