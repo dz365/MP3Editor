@@ -5,6 +5,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QLabel,
     QVBoxLayout,
+    QHBoxLayout,
     QWidget,
     QFileDialog,
     QLineEdit,
@@ -20,7 +21,7 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("MP3 Editor")
-
+        self.resize(1024, 768)
         # Set up the main layout
         self.main_layout = QVBoxLayout()
         self.audio_info_layout = QVBoxLayout()
@@ -63,7 +64,13 @@ class MainWindow(QMainWindow):
             audio = MutagenFile(file_path, easy=True)
             audio.add_tags()
         
+        self.main_layout.removeItem(self.audio_info_layout)
         self.clearLayout(self.audio_info_layout)
+
+        self.audio_info_layout = QHBoxLayout()
+        self.audio_info_layout.setAlignment(Qt.AlignTop)
+        self.audio_info_layout.addStretch()
+        self.main_layout.addLayout(self.audio_info_layout)
 
         COMMON_TAGS = {
             'TIT2': 'Title',
@@ -95,8 +102,10 @@ class MainWindow(QMainWindow):
                 continue
             label = QLabel(f"{tag}: ")
             input = QLineEdit(str(value))
+            input.setStyleSheet("padding: 4px 8px; border-radius: 4px;")
             form_layout.addRow(label, input)
         self.audio_info_layout.addLayout(form_layout)
+        self.audio_info_layout.addStretch()
         
 
 # Create the application instance
