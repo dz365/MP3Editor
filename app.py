@@ -100,6 +100,8 @@ class MainWindow(QMainWindow):
                 self.audio_info_layout.addWidget(image_label)
                 break
         
+        update_audio_info_layout = QVBoxLayout()
+        update_audio_info_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         form_layout = QFormLayout()
         for _tag, value in audio.items():
             tag = COMMON_TAGS.get(_tag)
@@ -107,12 +109,28 @@ class MainWindow(QMainWindow):
                 print(_tag)
                 continue
             label = QLabel(f"{tag}: ")
+            label.setProperty("tag", _tag)
             input = QLineEdit(str(value))
             input.setObjectName("audio-tag-input")
             form_layout.addRow(label, input)
-        self.audio_info_layout.addLayout(form_layout)
-        self.audio_info_layout.addStretch()
         
+        update_audio_info_layout.addLayout(form_layout)
+
+        save_changes_button = QPushButton("Save changes")
+        save_changes_button.clicked.connect(lambda: self.update_metadata(audio, form_layout))
+        update_audio_info_layout.addWidget(save_changes_button)
+        
+        self.audio_info_layout.addLayout(update_audio_info_layout)
+        self.audio_info_layout.addStretch()
+    
+    def update_metadata(self, audio: ID3, form_layout: QFormLayout):
+        for i in range(QFormLayout.rowCount(form_layout)):
+            # Get the item at the specified row and role (LabelRole or FieldRole)
+            label_widget = form_layout.itemAt(i, QFormLayout.ItemRole.LabelRole).widget()
+            field_widget = form_layout.itemAt(i, QFormLayout.ItemRole.FieldRole).widget()
+  
+            if isinstance(label_widget, QLabel) and isinstance(field_widget, QLineEdit):
+                print(label_widget.text(), field_widget.text())
 
 # Create the application instance
 app = QApplication(sys.argv)
