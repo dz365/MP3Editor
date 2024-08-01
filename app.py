@@ -22,9 +22,15 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("MP3 Editor")
         self.resize(1024, 768)
+        
+        with open("style.qss", "r") as file:
+            self.setStyleSheet(file.read())
+
         # Set up the main layout
         self.main_layout = QVBoxLayout()
         self.audio_info_layout = QVBoxLayout()
+
+        self.main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
     
         self.file_selected_label = QLabel("No file selected")
         self.main_layout.addWidget(self.file_selected_label)
@@ -102,7 +108,7 @@ class MainWindow(QMainWindow):
                 continue
             label = QLabel(f"{tag}: ")
             input = QLineEdit(str(value))
-            input.setStyleSheet("padding: 4px 8px; border-radius: 4px;")
+            input.setObjectName("audio-tag-input")
             form_layout.addRow(label, input)
         self.audio_info_layout.addLayout(form_layout)
         self.audio_info_layout.addStretch()
