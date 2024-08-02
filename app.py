@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtGui import QImage, QPixmap
 from PySide6.QtCore import Qt
-from mutagen.id3 import ID3, ID3NoHeaderError, APIC
+from mutagen.id3 import ID3, ID3NoHeaderError, APIC, TIT2, TPE1, TALB, TDRC
 from mutagen import File as MutagenFile
 
 class MainWindow(QMainWindow):
@@ -101,6 +101,7 @@ class MainWindow(QMainWindow):
                 break
         
         update_audio_info_layout = QVBoxLayout()
+        update_audio_info_layout.setObjectName("update_audio_info_layout")
         update_audio_info_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         form_layout = QFormLayout()
         for _tag, value in audio.items():
@@ -124,13 +125,47 @@ class MainWindow(QMainWindow):
         self.audio_info_layout.addStretch()
     
     def update_metadata(self, audio: ID3, form_layout: QFormLayout):
+        """
+        Updates the ID3 tags of the provided audio file based on the values in the form layout.
+
+        This method iterates through the rows of the given form layout, retrieves the tag information from
+        the QLabel and QLineEdit widgets, and updates the corresponding ID3 tags in the audio file. After 
+        updating the tags, it adds a label indicating a successful update to the UI if it doesn't already exist.
+        """
+
         for i in range(QFormLayout.rowCount(form_layout)):
             # Get the item at the specified row and role (LabelRole or FieldRole)
             label_widget = form_layout.itemAt(i, QFormLayout.ItemRole.LabelRole).widget()
             field_widget = form_layout.itemAt(i, QFormLayout.ItemRole.FieldRole).widget()
-  
-            if isinstance(label_widget, QLabel) and isinstance(field_widget, QLineEdit):
-                print(label_widget.text(), field_widget.text())
+            self.update_tag(audio, label_widget.property("tag"), field_widget.text())
+
+        # Create the label for update status
+        update_text_label = QLabel("Successfully updated tags")
+        update_text_label.setObjectName("update_text_label")
+
+        # Find the update_audio_info_layout within the parent widget
+        update_audio_info_layout = self.findChild(QVBoxLayout, "update_audio_info_layout")
+
+        # Check if the update_text_label already exists
+        existing_label = self.findChild(QLabel, "update_text_label")
+        if not existing_label:
+            update_audio_info_layout.addWidget(update_text_label)
+
+    def update_tag(self, audio: ID3, tag: str, new_value: str):
+        """
+        Updates a specific ID3 tag in the given audio file with a new value.
+        """
+        if tag == 'TIT2':
+            audio[tag] = TIT2(encoding=3, text=new_value)
+        elif tag == 'TPE1':
+            audio[tag] = TPE1(encoding=3, text=new_value)
+        elif tag == 'TALB':
+            audio[tag] = TALB(encoding=3, text=new_value)
+        elif tag == 'TDRC':
+            audio[tag] = TDRC(encoding=3, text=new_value)
+        audio.save()
+
+
 
 # Create the application instance
 app = QApplication(sys.argv)
