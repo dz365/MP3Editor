@@ -90,16 +90,7 @@ class MainWindow(QMainWindow):
 
 
         # Display album cover first
-        for tag in audio.values():
-            if isinstance(tag, APIC):
-                image = QImage()
-                image.loadFromData(tag.data)
-                pixmap = QPixmap.fromImage(image).scaled(256, 256, Qt.KeepAspectRatio)
-
-                image_label = QLabel()
-                image_label.setPixmap(pixmap)
-                self.audio_info_layout.addWidget(image_label)
-                break
+        self.init_cover_art_display(audio)
         
         update_audio_info_layout = QVBoxLayout()
         update_audio_info_layout.setObjectName("update_audio_info_layout")
@@ -151,7 +142,7 @@ class MainWindow(QMainWindow):
         """
         Updates a specific ID3 tag in the given audio file with a new value.
         """
-        
+
         if tag == 'TIT2':
             audio[tag] = TIT2(encoding=3, text=new_value)
         elif tag == 'TPE1':
@@ -187,7 +178,83 @@ class MainWindow(QMainWindow):
         else:
             existing_label.setText(text)
     
+    def init_cover_art_display(self, audio: ID3):
+        """
+        Initialize the cover art display section in the application and add a button to change the cover art.
+        """
 
+        cover_art_layout = QVBoxLayout()
+        for tag in audio.values():
+            if isinstance(tag, APIC):
+                image = QImage()
+                image.loadFromData(tag.data)
+                pixmap = QPixmap.fromImage(image).scaled(256, 256, Qt.KeepAspectRatio)
+
+                image_label = QLabel()
+                image_label.setObjectName("cover_art_image")
+                image_label.setPixmap(pixmap)
+                cover_art_layout.addWidget(image_label)
+                break
+        
+        change_cover_art_button = QPushButton("Change cover art")
+        change_cover_art_button.clicked.connect(lambda: self.upload_image(audio))
+        cover_art_layout.addWidget(change_cover_art_button)
+
+        self.audio_info_layout.addLayout(cover_art_layout)
+
+    def upload_image(self, audio: ID3):
+        """
+        Open a file dialog to select an image and set it as the cover art for the provided ID3 audio object.
+        """
+        
+        file_dialog = QFileDialog(self)
+        file_dialog.setFileMode(QFileDialog.ExistingFile)
+        file_dialog.setNameFilter("Images (*.png *.jpg *.jpeg *.bmp *.gif)")
+
+        if file_dialog.exec():
+            file_path = file_dialog.selectedFiles()[0]
+            self.display_cover_art(file_path)
+            self.set_cover_art(audio, file_path)
+    
+    def display_cover_art(self, file_path: str):
+        """
+        Display the cover art image in the application.
+        """
+
+        cover_art_label = self.findChild(QLabel, "cover_art_image")
+        pixmap = QPixmap(file_path).scaled(256, 256, Qt.KeepAspectRatio)
+        cover_art_label.setPixmap(pixmap)
+
+    def set_cover_art(self, audio: ID3, img_path: str):
+        """
+        Set the cover art (APIC frame) for the given ID3 audio object using the specified image file.
+        """
+        # Remove existing APIC frames
+        audio.delall("APIC")
+
+        with open(img_path, 'rb') as img:
+            audio.add(APIC(
+                encoding = 3,  # UTF-8
+                mime = self.get_mime_type(img_path),
+                type = 3,  # Cover front
+                desc = 'Cover',
+                data = img.read()
+            ))
+        audio.save()
+    
+    def get_mime_type(self, file_path: str):
+        """
+        Determine the MIME type of an image file based on its file extension.
+        Defaults to image/jpeg.
+        """
+        if file_path.lower().endswith('.png'):
+            return 'image/png'
+        elif file_path.lower().endswith('.jpg') or file_path.lower().endswith('.jpeg'):
+            return 'image/jpeg'
+        elif file_path.lower().endswith('.gif'):
+            return 'image/gif'
+        return 'image/jpeg'  # Default to JPEG
+    
 
 # Create the application instance
 app = QApplication(sys.argv)
