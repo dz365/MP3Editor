@@ -33,14 +33,23 @@ class MainWindow(QMainWindow):
 
         self.main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
     
-        self.file_selected_label = QLabel("No file selected")
-        self.main_layout.addWidget(self.file_selected_label)
+        file_selected_label = QLabel("No file selected")
+        file_selected_label.setObjectName("file_selected_label")
+        file_selected_label.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        self.main_layout.addWidget(file_selected_label)
 
         # Create a file upload button and connect its clicked signal to a method
-        self.file_button = QPushButton("Upload File")
-        self.file_button.clicked.connect(self.upload_file)
-        self.main_layout.addWidget(self.file_button)
+        file_button = QPushButton("Upload File")
+        file_button.clicked.connect(self.upload_file)
 
+        # Create a horizontal layout to contain the button
+        button_layout = QHBoxLayout()
+        button_layout.addStretch()
+        button_layout.addWidget(file_button)
+        button_layout.addStretch()
+
+        # Add the button layout to the main layout
+        self.main_layout.addLayout(button_layout)
         self.main_layout.addLayout(self.audio_info_layout)
 
         # Set up a central widget with the layout
@@ -86,7 +95,8 @@ class MainWindow(QMainWindow):
             'TDRC': 'Year'
         }
 
-        self.file_selected_label.setText(file_path)
+        file_selected_label = self.findChild(QLabel, "file_selected_label")
+        file_selected_label.setText(file_path)
 
 
         # Display album cover first
