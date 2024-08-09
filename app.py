@@ -106,14 +106,11 @@ class MainWindow(QMainWindow):
         update_audio_info_layout.setObjectName("update_audio_info_layout")
         update_audio_info_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         form_layout = QFormLayout()
-        for _tag, value in audio.items():
-            tag = COMMON_TAGS.get(_tag)
-            if not tag:
-                print(_tag)
-                continue
-            label = QLabel(f"{tag}: ")
-            label.setProperty("tag", _tag)
-            input = QLineEdit(str(value))
+
+        for tag, value in COMMON_TAGS.items():
+            label = QLabel(f"{value}: ")
+            label.setProperty("tag", tag)
+            input = QLineEdit(str(audio.get(tag, "")))
             input.setObjectName("audio-tag-input")
             form_layout.addRow(label, input)
         
@@ -160,7 +157,7 @@ class MainWindow(QMainWindow):
         elif tag == 'TALB':
             audio[tag] = TALB(encoding=3, text=new_value)
         elif tag == 'TDRC':
-            if not re.match(r'^\d{4}(-\d{2}){0,2}$', new_value):
+            if not re.match(r'^(\d{4}(-\d{2}){0,2})?$|^$', new_value):
                 raise ValueError(f"Invalid date format for TDRC tag: {new_value}. Expected format is YYYY, YYYY-MM, or YYYY-MM-DD.")
             audio[tag] = TDRC(encoding=3, text=new_value)
         audio.save()
